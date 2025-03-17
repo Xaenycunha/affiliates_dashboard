@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Affiliates dashboard for flight complaint website",
   "scripts": {
-    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "start": "npm start",
     "server": "cd backend && npm run dev",
     "client": "cd frontend && npm start",
     "install-all": "npm install && cd frontend && npm install && cd ../backend && npm install"
