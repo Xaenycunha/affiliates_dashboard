@@ -141,15 +141,30 @@ const Profile: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+
     try {
+      // Get the country dial code
+      const selectedCountry = countries.find(c => c.code === formData.country);
+      const countryDialCode = selectedCountry?.dialCode || '+55'; // Default to Brazil if not found
+
+      // Combine the dial code with the phone number
+      const fullPhoneNumber = `${countryDialCode}${formData.phone}`;
+
       const token = localStorage.getItem('token');
-      await api.put('/api/affiliate/profile', formData, {
+      const response = await api.put('/api/affiliate/profile', {
+        ...formData,
+        phone: fullPhoneNumber // Send the full phone number with country code
+      }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setSuccess('Profile updated successfully');
-      setTimeout(() => setSuccess(''), 3000);
+
+      setSuccess('Profile updated successfully!');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to update profile');
+    } finally {
+      setLoading(false);
     }
   };
 
