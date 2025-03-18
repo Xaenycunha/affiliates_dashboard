@@ -34,7 +34,10 @@ const Login: React.FC = () => {
 
     try {
       const response = await api.post('/api/auth/login', formData);
+      console.log('Login response:', response.data);
       localStorage.setItem('token', response.data.token);
+      localStorage.setItem('userName', response.data.affiliate.name);
+      console.log('Stored userName:', response.data.affiliate.name);
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to login');

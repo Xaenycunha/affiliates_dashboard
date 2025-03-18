@@ -12,6 +12,7 @@ const Register: React.FC = () => {
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -22,6 +23,7 @@ const Register: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     setError('');
 
     if (formData.password !== formData.confirmPassword) {
@@ -30,19 +32,20 @@ const Register: React.FC = () => {
     }
 
     try {
-      await api.post('/api/auth/register', {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password
-      });
-
-      setSuccess('Registration successful! Please login.');
+      const response = await api.post('/api/auth/register', formData);
+      console.log('Registration response:', response.data);
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('userName', response.data.affiliate.name);
+      console.log('Stored userName:', response.data.affiliate.name);
+      setSuccess('Registration successful! Redirecting to login...');
       setTimeout(() => {
-        navigate('/login');
+        navigate('/login', { state: { message: 'Registration successful! Please login.' } });
       }, 2000);
     } catch (err: any) {
       console.error('Registration error:', err);
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+      setError(err.response?.data?.message || 'Failed to register');
+    } finally {
+      setLoading(false);
     }
   };
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 interface LayoutProps {
@@ -7,9 +7,22 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
+  const [userName, setUserName] = useState('');
+
+  useEffect(() => {
+    const name = localStorage.getItem('userName');
+    console.log('Retrieved userName from localStorage:', name);
+    if (name) {
+      setUserName(name);
+    } else {
+      // If no name is found, redirect to login
+      navigate('/login');
+    }
+  }, [navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('userName');
     navigate('/register');
   };
 
@@ -18,7 +31,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Sidebar */}
       <div className="fixed inset-y-0 left-0 w-64 bg-indigo-700 text-white">
         <div className="flex items-center justify-center h-16 bg-indigo-800">
-          <h1 className="text-xl font-bold">Affiliate Dashboard</h1>
+          <h1 className="text-xl font-bold">{userName ? `${userName}'s Dashboard` : 'Loading...'}</h1>
         </div>
         <nav className="mt-5">
           <a
