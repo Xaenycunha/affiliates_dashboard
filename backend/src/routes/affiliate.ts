@@ -31,15 +31,30 @@ const authenticateToken = (req: AuthenticatedRequest, res: Response, next: Funct
   });
 };
 
+// Get affiliate profile
+router.get('/profile', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const affiliate = await Affiliate.findById(req.user?.id).select('-password');
+    
+    if (!affiliate) {
+      return res.status(404).json({ message: 'Affiliate not found' });
+    }
+
+    res.json(affiliate);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching profile' });
+  }
+});
+
 // Update affiliate profile
 router.put('/profile', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { phone, bankData } = req.body;
+    const { name, email, phone, country, bankName, bankAccount, bankAgency, bankType, pixKey } = req.body;
     const affiliate = await Affiliate.findByIdAndUpdate(
       req.user?.id,
-      { phone, bankData },
+      { name, email, phone, country, bankName, bankAccount, bankAgency, bankType, pixKey },
       { new: true }
-    );
+    ).select('-password');
 
     if (!affiliate) {
       return res.status(404).json({ message: 'Affiliate not found' });
@@ -54,20 +69,48 @@ router.put('/profile', authenticateToken, async (req: AuthenticatedRequest, res:
 // Get affiliate dashboard data
 router.get('/dashboard', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { startDate, endDate } = req.query;
+    const { dateRange } = req.query;
     const affiliateId = req.user?.id;
+
+    // Calculate date range based on the parameter
+    let startDate = new Date();
+    let endDate = new Date();
+
+    switch (dateRange) {
+      case '7d':
+        startDate.setDate(startDate.getDate() - 7);
+        break;
+      case '30d':
+        startDate.setDate(startDate.getDate() - 30);
+        break;
+      case '90d':
+        startDate.setDate(startDate.getDate() - 90);
+        break;
+      case '1y':
+        startDate.setFullYear(startDate.getFullYear() - 1);
+        break;
+      default:
+        startDate.setDate(startDate.getDate() - 7); // Default to 7 days
+    }
 
     // Get visits count
     const visits = await Visit.find({
       affiliateId,
       createdAt: {
-        $gte: new Date(startDate as string),
-        $lte: new Date(endDate as string)
+        $gte: startDate,
+        $lte: endDate
       }
     }).count();
 
     // Get cases statistics
-    const cases = await Case.find({ affiliateId });
+    const cases = await Case.find({ 
+      affiliateId,
+      createdAt: {
+        $gte: startDate,
+        $lte: endDate
+      }
+    });
+    
     const casesStats = {
       total: cases.length,
       pending: cases.filter(c => c.status === 'pending').length,
@@ -80,11 +123,12 @@ router.get('/dashboard', authenticateToken, async (req: AuthenticatedRequest, re
       .select('-password');
 
     res.json({
-      visits,
-      casesStats,
+      totalVisits: visits,
+      cases: casesStats,
       affiliate
     });
   } catch (error) {
+    console.error('Dashboard error:', error);
     res.status(500).json({ message: 'Error fetching dashboard data' });
   }
 });

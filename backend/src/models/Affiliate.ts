@@ -6,11 +6,12 @@ export interface IAffiliate extends Document {
   email: string;
   password: string;
   phone?: string;
-  bankData?: {
-    bankName: string;
-    accountNumber: string;
-    agency: string;
-  };
+  country?: string;
+  bankName?: string;
+  bankAccount?: string;
+  bankAgency?: string;
+  bankType?: string;
+  pixKey?: string;
   referralCode: string;
   createdAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -21,11 +22,12 @@ const affiliateSchema = new Schema<IAffiliate>({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   phone: { type: String },
-  bankData: {
-    bankName: String,
-    accountNumber: String,
-    agency: String
-  },
+  country: { type: String },
+  bankName: { type: String },
+  bankAccount: { type: String },
+  bankAgency: { type: String },
+  bankType: { type: String },
+  pixKey: { type: String },
   referralCode: { type: String, required: true, unique: true },
   createdAt: { type: Date, default: Date.now }
 });

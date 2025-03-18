@@ -3,10 +3,17 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import Case from '../models/Case';
 
+// Custom interface for authenticated requests
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+  };
+}
+
 const router = express.Router();
 
 // Middleware to verify JWT token
-const authenticateToken = (req: Request, res: Response, next: Function) => {
+const authenticateToken = (req: AuthenticatedRequest, res: Response, next: Function) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -24,10 +31,10 @@ const authenticateToken = (req: Request, res: Response, next: Function) => {
 };
 
 // Get all cases for an affiliate
-router.get('/', authenticateToken, async (req: Request, res: Response) => {
+router.get('/', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { status, startDate, endDate } = req.query;
-    const query: any = { affiliateId: req.user.id };
+    const query: any = { affiliateId: req.user?.id };
 
     if (status) {
       query.status = status;
@@ -48,9 +55,9 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
 });
 
 // Get case statistics
-router.get('/stats', authenticateToken, async (req: Request, res: Response) => {
+router.get('/stats', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const cases = await Case.find({ affiliateId: req.user.id });
+    const cases = await Case.find({ affiliateId: req.user?.id });
     const stats = {
       total: cases.length,
       pending: cases.filter(c => c.status === 'pending').length,
@@ -64,11 +71,11 @@ router.get('/stats', authenticateToken, async (req: Request, res: Response) => {
 });
 
 // Create new case
-router.post('/', authenticateToken, async (req: Request, res: Response) => {
+router.post('/', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { flightNumber, airline, description } = req.body;
     const newCase = new Case({
-      affiliateId: req.user.id,
+      affiliateId: req.user?.id,
       flightNumber,
       airline,
       description,
@@ -83,11 +90,11 @@ router.post('/', authenticateToken, async (req: Request, res: Response) => {
 });
 
 // Update case status
-router.patch('/:id/status', authenticateToken, async (req: Request, res: Response) => {
+router.patch('/:id/status', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { status } = req.body;
     const updatedCase = await Case.findOneAndUpdate(
-      { _id: req.params.id, affiliateId: req.user.id },
+      { _id: req.params.id, affiliateId: req.user?.id },
       { status },
       { new: true }
     );
