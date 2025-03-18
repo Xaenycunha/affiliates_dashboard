@@ -13,36 +13,65 @@ export interface IAffiliate extends Document {
   bankType?: string;
   pixKey?: string;
   referralCode: string;
-  createdAt: Date;
+  resetPasswordToken?: string;
+  resetPasswordExpire?: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
 const affiliateSchema = new Schema<IAffiliate>({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  phone: { type: String },
-  country: { type: String },
-  bankName: { type: String },
-  bankAccount: { type: String },
-  bankAgency: { type: String },
-  bankType: { type: String },
-  pixKey: { type: String },
-  referralCode: { type: String, required: true, unique: true },
-  createdAt: { type: Date, default: Date.now }
+  name: {
+    type: String,
+    required: true
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  password: {
+    type: String,
+    required: true
+  },
+  phone: {
+    type: String
+  },
+  country: {
+    type: String
+  },
+  bankName: {
+    type: String
+  },
+  bankAccount: {
+    type: String
+  },
+  bankAgency: {
+    type: String
+  },
+  bankType: {
+    type: String
+  },
+  pixKey: {
+    type: String
+  },
+  referralCode: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  resetPasswordToken: String,
+  resetPasswordExpire: Date
+}, {
+  timestamps: true
 });
 
 // Hash password before saving
-affiliateSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
-  
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error: any) {
-    next(error);
+affiliateSchema.pre('save', async function(next: (err?: Error) => void) {
+  if (!this.isModified('password')) {
+    return next();
   }
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
 });
 
 // Method to compare password
