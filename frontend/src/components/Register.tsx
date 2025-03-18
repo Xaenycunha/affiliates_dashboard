@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api/axios';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ const Register: React.FC = () => {
     }
 
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', {
+      const response = await api.post('/api/auth/register', {
         name: formData.name,
         email: formData.email,
         password: formData.password
@@ -38,7 +38,8 @@ const Register: React.FC = () => {
       localStorage.setItem('token', response.data.token);
       navigate('/profile');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Error registering');
+      console.error('Registration error:', err);
+      setError(err.response?.data?.message || 'Registration failed. Please try again.');
     }
   };
 
@@ -51,16 +52,9 @@ const Register: React.FC = () => {
           </h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{error}</div>
-            </div>
-          )}
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label htmlFor="name" className="sr-only">
-                Name
-              </label>
+              <label htmlFor="name" className="sr-only">Name</label>
               <input
                 id="name"
                 name="name"
@@ -73,9 +67,7 @@ const Register: React.FC = () => {
               />
             </div>
             <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
-              </label>
+              <label htmlFor="email" className="sr-only">Email address</label>
               <input
                 id="email"
                 name="email"
@@ -88,9 +80,7 @@ const Register: React.FC = () => {
               />
             </div>
             <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
+              <label htmlFor="password" className="sr-only">Password</label>
               <input
                 id="password"
                 name="password"
@@ -103,9 +93,7 @@ const Register: React.FC = () => {
               />
             </div>
             <div>
-              <label htmlFor="confirmPassword" className="sr-only">
-                Confirm Password
-              </label>
+              <label htmlFor="confirmPassword" className="sr-only">Confirm Password</label>
               <input
                 id="confirmPassword"
                 name="confirmPassword"
@@ -118,6 +106,12 @@ const Register: React.FC = () => {
               />
             </div>
           </div>
+
+          {error && (
+            <div className="text-red-500 text-sm text-center">
+              {error}
+            </div>
+          )}
 
           <div>
             <button

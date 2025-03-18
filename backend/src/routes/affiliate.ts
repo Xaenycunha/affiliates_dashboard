@@ -1,14 +1,20 @@
-import express from 'express';
-import { Request, Response } from 'express';
+import express, { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import Affiliate from '../models/Affiliate';
 import Visit from '../models/Visit';
 import Case from '../models/Case';
 
+// Extend the Express Request type to include user
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+  };
+}
+
 const router = express.Router();
 
 // Middleware to verify JWT token
-const authenticateToken = (req: Request, res: Response, next: Function) => {
+const authenticateToken = (req: AuthenticatedRequest, res: Response, next: Function) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -26,11 +32,11 @@ const authenticateToken = (req: Request, res: Response, next: Function) => {
 };
 
 // Update affiliate profile
-router.put('/profile', authenticateToken, async (req: Request, res: Response) => {
+router.put('/profile', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { phone, bankData } = req.body;
     const affiliate = await Affiliate.findByIdAndUpdate(
-      req.user.id,
+      req.user?.id,
       { phone, bankData },
       { new: true }
     );
@@ -46,10 +52,10 @@ router.put('/profile', authenticateToken, async (req: Request, res: Response) =>
 });
 
 // Get affiliate dashboard data
-router.get('/dashboard', authenticateToken, async (req: Request, res: Response) => {
+router.get('/dashboard', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { startDate, endDate } = req.query;
-    const affiliateId = req.user.id;
+    const affiliateId = req.user?.id;
 
     // Get visits count
     const visits = await Visit.find({
